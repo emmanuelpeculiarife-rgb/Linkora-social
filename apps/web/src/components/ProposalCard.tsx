@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { VotePanel } from "./VotePanel";
 
 export interface Proposal {
   id: string | number;
@@ -49,17 +49,9 @@ const STATUS_STYLES: Record<Proposal["status"], string> = {
  * values.
  */
 export function ProposalCard({ proposal, onVote, disabled = false }: ProposalCardProps) {
-  const [localVote, setLocalVote] = useState<"for" | "against" | null>(null);
-
   const totalVotes = proposal.votesFor + proposal.votesAgainst;
   const forPct = totalVotes > 0 ? Math.round((proposal.votesFor / totalVotes) * 100) : 0;
   const againstPct = totalVotes > 0 ? 100 - forPct : 0;
-
-  const handleVote = (direction: "for" | "against") => {
-    if (disabled || localVote !== null) return;
-    setLocalVote(direction);
-    onVote?.(proposal.id, direction);
-  };
 
   return (
     <article className="rounded-xl border border-[var(--border)] bg-[var(--muted)] p-4 md:p-5 transition-shadow hover:shadow-md">
@@ -114,34 +106,7 @@ export function ProposalCard({ proposal, onVote, disabled = false }: ProposalCar
 
       {/* Actions */}
       {proposal.status === "active" && (
-        <div className="flex gap-3">
-          <button
-            type="button"
-            onClick={() => handleVote("for")}
-            disabled={disabled || localVote !== null}
-            className={`flex-1 rounded-lg border px-4 py-2 text-sm font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-50 ${
-              localVote === "for"
-                ? "border-[var(--color-success)] bg-[var(--color-success-light)] text-[var(--color-success)]"
-                : "border-[var(--border)] text-[var(--foreground)] hover:border-[var(--color-success)]/60 hover:text-[var(--color-success)]"
-            }`}
-            aria-pressed={localVote === "for"}
-          >
-            ✓ Vote For
-          </button>
-          <button
-            type="button"
-            onClick={() => handleVote("against")}
-            disabled={disabled || localVote !== null}
-            className={`flex-1 rounded-lg border px-4 py-2 text-sm font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-50 ${
-              localVote === "against"
-                ? "border-[var(--color-error)] bg-[var(--color-error-light)] text-[var(--color-error)]"
-                : "border-[var(--border)] text-[var(--foreground)] hover:border-[var(--color-error)]/60 hover:text-[var(--color-error)]"
-            }`}
-            aria-pressed={localVote === "against"}
-          >
-            ✗ Vote Against
-          </button>
-        </div>
+        <VotePanel proposalId={proposal.id} onVote={onVote} disabled={disabled} />
       )}
 
       {proposal.endsAt && proposal.status === "active" && (
