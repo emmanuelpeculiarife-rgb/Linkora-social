@@ -7,9 +7,13 @@ export interface Proposal {
   title: string;
   description: string;
   proposer: string;
-  status: "active" | "passed" | "rejected" | "pending";
+  status: "active" | "passed" | "rejected" | "pending" | "executed";
   votesFor: number;
   votesAgainst: number;
+  /** The connected user's on-chain vote, when available. */
+  userVote?: "for" | "against" | null;
+  /** The connected user's voting power for this proposal. */
+  votingPower?: number;
   endsAt?: string;
   createdAt?: string;
 }
@@ -39,6 +43,8 @@ const STATUS_STYLES: Record<Proposal["status"], string> = {
     "bg-[var(--color-error-light)] text-[var(--color-error)] border border-[var(--color-error)]/30",
   pending:
     "bg-[var(--color-warning-light)] text-[var(--color-warning)] border border-[var(--color-warning)]/30",
+  executed:
+    "bg-[var(--color-info-light)] text-[var(--color-info)] border border-[var(--color-info)]/30",
 };
 
 /**
@@ -49,9 +55,18 @@ const STATUS_STYLES: Record<Proposal["status"], string> = {
  * values.
  */
 export function ProposalCard({ proposal, onVote, disabled = false }: ProposalCardProps) {
+  const [localVote, setLocalVote] = useState<"for" | "against" | null>(null);
+  const currentVote = localVote ?? proposal.userVote ?? null;
+
   const totalVotes = proposal.votesFor + proposal.votesAgainst;
   const forPct = totalVotes > 0 ? Math.round((proposal.votesFor / totalVotes) * 100) : 0;
   const againstPct = totalVotes > 0 ? 100 - forPct : 0;
+
+  const handleVote = (direction: "for" | "against") => {
+    if (disabled || currentVote !== null) return;
+    setLocalVote(direction);
+    onVote?.(proposal.id, direction);
+  };
 
   return (
     <article className="rounded-xl border border-[var(--border)] bg-[var(--muted)] p-4 md:p-5 transition-shadow hover:shadow-md">
@@ -102,11 +117,47 @@ export function ProposalCard({ proposal, onVote, disabled = false }: ProposalCar
           />
         </div>
         <p className="mt-1 text-xs text-[var(--text-muted)]">{totalVotes} total votes</p>
+        {proposal.votingPower !== undefined && (
+          <p className="mt-1 text-xs text-[var(--text-muted)]">
+            Your voting power: {proposal.votingPower}
+          </p>
+        )}
       </div>
 
       {/* Actions */}
-      {proposal.status === "active" && (
-        <VotePanel proposalId={proposal.id} onVote={onVote} disabled={disabled} />
+      {currentVote !== null ? (
+        <p className="text-sm text-[var(--text-muted)]" role="status">
+          You voted {currentVote}.
+        </p>
+      ) : proposal.status === "active" && (
+        <div className="flex gap-3">
+          <button
+            type="button"
+            onClick={() => handleVote("for")}
+            disabled={disabled}
+            className={`flex-1 rounded-lg border px-4 py-2 text-sm font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-50 ${
+              localVote === "for"
+                ? "border-[var(--color-success)] bg-[var(--color-success-light)] text-[var(--color-success)]"
+                : "border-[var(--border)] text-[var(--foreground)] hover:border-[var(--color-success)]/60 hover:text-[var(--color-success)]"
+            }`}
+            aria-pressed={false}
+          >
+            ✓ Vote For
+          </button>
+          <button
+            type="button"
+            onClick={() => handleVote("against")}
+            disabled={disabled}
+            className={`flex-1 rounded-lg border px-4 py-2 text-sm font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-50 ${
+              localVote === "against"
+                ? "border-[var(--color-error)] bg-[var(--color-error-light)] text-[var(--color-error)]"
+                : "border-[var(--border)] text-[var(--foreground)] hover:border-[var(--color-error)]/60 hover:text-[var(--color-error)]"
+            }`}
+            aria-pressed={false}
+          >
+            ✗ Vote Against
+          </button>
+        </div>
       )}
 
       {proposal.endsAt && proposal.status === "active" && (

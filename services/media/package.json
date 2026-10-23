@@ -8,6 +8,7 @@
   "scripts": {
     "lint": "eslint . --ext .ts,.tsx",
     "format": "prettier --write \"src/**/*.{ts,tsx}\"",
+    "test": "jest",
     "dev": "tsx watch src/index.ts",
     "build": "tsc",
     "typecheck": "tsc --noEmit",
@@ -37,7 +38,7 @@
     "jest": "^29.7.0",
     "ts-jest": "^29.4.12",
     "tsx": "^4.7.0",
-    "typescript": "^5.9.3"
+    "typescript": "^7.0.2"
   },
   "engines": {
     "node": ">=18"

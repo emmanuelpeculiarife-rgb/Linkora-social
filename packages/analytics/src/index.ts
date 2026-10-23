@@ -1,9 +1,8 @@
 /**
  * @linkora/analytics
  *
- * On-chain analytics primitives for the Linkora protocol.
- * Period-based creator analytics aggregation.
+ * Analytics aggregation primitives for Linkora services.
  */
 
-export { computeCreatorMetrics } from "./aggregator.js";
-export type { AnalyticsQueryClient, CreatorMetrics, CreatorMetricsPeriod } from "./aggregator.js";
+export { ANALYTICS_FUNNELS, getFunnelMetrics, UnknownFunnelError } from "./funnel";
+export type { AnalyticsQueryPool, FunnelName, FunnelResult, FunnelStepResult } from "./funnel";
